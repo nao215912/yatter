@@ -42,6 +42,11 @@ clean:
 	git clean -f -X app bin build
 
 up:
+	cp .air.norml.conf .air.conf
+	docker-compose up
+
+debug:
+	cp .air.debug.conf .air.conf
 	docker-compose up
 
 stop:

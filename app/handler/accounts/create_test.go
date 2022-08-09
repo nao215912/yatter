@@ -64,7 +64,6 @@ func TestCreate(t *testing.T) {
 			if err := json.NewDecoder(res.Body).Decode(&gotBody); err != nil {
 				t.Fatal(err)
 			}
-
 			if err != nil {
 				t.Fatal(err)
 			}

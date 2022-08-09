@@ -27,7 +27,7 @@ mod:
 	go mod download
 
 test:
-	go test $(shell go list ${MAKEFILE_DIR}/...)
+	go test -v -count=1 $(shell go list ${MAKEFILE_DIR}/...)
 
 lint:
 	if ! [ -x $(GOPATH)/bin/golangci-lint ]; then \
@@ -41,4 +41,22 @@ vet:
 clean:
 	git clean -f -X app bin build
 
-.PHONY:	test clean
+up:
+	docker-compose up
+
+stop:
+	docker-compose stop
+
+
+del:
+	docker system prune -af
+	rm -rf .data
+
+web:
+	docker-compose exec web bash
+
+db:
+	docker-compose exec db mysql -u root
+
+
+.PHONY:	test clean up stop del

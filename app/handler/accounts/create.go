@@ -2,37 +2,50 @@ package accounts
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"yatter-backend-go/app/domain/object"
 	"yatter-backend-go/app/handler/httperror"
 )
 
-// Request body for `POST /v1/accounts`
-type AddRequest struct {
+type CreateRequest struct {
 	Username string
 	Password string
 }
 
-// Handle request for `POST /v1/accounts`
 func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
-	// ctx := r.Context()
-
-	var req AddRequest
+	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httperror.BadRequest(w, err)
 		return
 	}
+	if req.Username == "" {
+		httperror.BadRequest(w, fmt.Errorf("username must not be an empty string"))
+		return
+	}
+	if req.Password == "" {
+		httperror.BadRequest(w, fmt.Errorf("password must not be an empty string"))
+		return
+	}
 
-	account := new(object.Account)
-	account.Username = req.Username
+	account := &object.Account{Username: req.Username}
 	if err := account.SetPassword(req.Password); err != nil {
 		httperror.InternalServerError(w, err)
 		return
 	}
 
-	_ = h.app.Dao.Account() // domain/repository の取得
-	panic("Must Implement Account Registration")
+	ar := h.app.Dao.Account()
+	ctx := r.Context()
+	if err := ar.Create(ctx, account); err != nil {
+		httperror.InternalServerError(w, err)
+		return
+	}
+	account, err := ar.FindByUsername(ctx, account.Username)
+	if err != nil {
+		httperror.InternalServerError(w, err)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(account); err != nil {
